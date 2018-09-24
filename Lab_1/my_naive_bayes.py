@@ -10,14 +10,14 @@ import time
 
 import matplotlib.pyplot as plt
 # unit test classifier
-from util import NB_DataHandler
+import util
 
 amazon = "amazon_cells_labelled.txt"
 imdb = "imdb_labelled.txt"
 yelp = "yelp_labelled.txt"
 test_file = sys.argv[1]
 
-v2 = NB_DataHandler(amazon, imdb, yelp, quiet=False)
+v2 = util.NB_DataHandler(amazon, imdb, yelp, quiet=False)
 res = v2.test()
 print("Initial Train Accuracy:\t{}%".format(str(round(res, 3))))
 
@@ -36,7 +36,7 @@ for i in range(1, runs + 1):
     if i % 10 == 0:
         t = round(time.time() - start, 3)
         print("run {}: {}s".format(i, t))
-    v2 = NB_DataHandler(amazon, imdb, yelp)
+    v2 = util.NB_DataHandler(amazon, imdb, yelp)
     res = v2.test()
     if res >= max_res:
         max_res = res
