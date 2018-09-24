@@ -19,7 +19,7 @@ class NB_DataHandler:
         :type shuffle: bool
         :type quiet: bool
         :type train_partition: float
-        :type files: string
+        :type files: str
         :param files: Comma separated string objects of the path to each raw data file.
         :param train_partition: The decimal portion of the total data to be used for training.
             The remaining will be used for testing.
@@ -42,16 +42,21 @@ class NB_DataHandler:
         self.log_priors = self.log_prior()
         self.log_likelihood()
 
-    def data_cutter(self):
+    def data_cutter(self, *custom_files):
         """
         Function to format raw data into training and testing format for classifier use.
         Partition is based on `self.partition` value.
 
+        :type custom_files: str
+        :param custom_files: Comma separated string objects of the path to each custom raw data file.
         :rtype: (list, list, list, dict)
         :return: tuple containing total data, training data, test data and initialised document classes dictionary.
         """
         # local variable declarations
-        files = self.files
+        if custom_files:
+            files = custom_files
+        else:
+            files = self.files
         total_data = []
         training_data = []
         test_data = []
@@ -105,7 +110,7 @@ class NB_DataHandler:
 
             # console readout.
             if not self.quiet:
-                print('{} finished on line {} with {} words'
+                print('{} Finished on line {} with {} words'
                       '\n==========================\n'.format(file, line_count, word_count))
             data.close()
 
@@ -247,17 +252,24 @@ class NB_DataHandler:
 
         return max(zip(sum_c.values(), sum_c.keys()))
 
-    def test(self):
+    def test(self, test=None):
         """
         Internal test and model validation function. classifies test data sentences
         and calculates the accuracy of the model.
 
+        :type test: list.
+        :param test: A list of alternative testing data.
         :return: The percentage score of the correctly classified cases over the total number of cases.
         """
         score = 0
         word_count = 0
 
-        for doc in self.test_data:
+        if test is not None:
+            test_docs = test
+        else:
+            test_docs = self.test_data
+
+        for doc in test_docs:
             words = doc[1]
             label = doc[0]
 
@@ -312,7 +324,9 @@ class NB_DataHandler:
         Generates missclassification report in console. This returns each missclassified
         sentence and shows how each word was classified. This is t give a better idea how how the model
         is behaving at it's extremes.
-        :param step:
+
+        :type step: int
+        :param step: The number to step by when printing report.
         """
         word_count = 0
         i = 0
@@ -323,8 +337,8 @@ class NB_DataHandler:
             result = self.nb_classifier(words)
             if result[1] != label:
                 if i % step == 0:
-                    print("sentence " + str(word_count))
-                    print('sentence:\n{}\n\npredicted\t: {}\nactual\t: {}'.format(str(words), result[1], label))
+                    print("Sentence " + str(word_count))
+                    print('Sentence:\n{}\n\nPredicted\t: {}\nActual\t: {}'.format(str(words), result[1], label))
 
                     for word in words:
                         if word in self.vocabulary:
@@ -336,3 +350,14 @@ class NB_DataHandler:
                     print('\n')
                 i += 1
             word_count += 1
+
+    def unit_test(self, file):
+        """
+        Function to test model on a new file.
+
+        :type file: str
+        :param file: An unknown test file
+        :return: The percentage score of the correctly classified cases over the total number of cases.
+        """
+        test = self.data_cutter(file)[0]
+        return self.test(test)
