@@ -4,12 +4,11 @@
 
 # In[1]:
 
-
+# unit test classifier
 import sys
 import time
 
 import matplotlib.pyplot as plt
-# unit test classifier
 import util
 
 amazon = "amazon_cells_labelled.txt"
@@ -26,7 +25,7 @@ print("Initial Train Accuracy:\t{}%".format(str(round(res, 3))))
 
 # test accuracy over several runs
 
-runs = 10
+runs = 100
 run = None
 max_res = 0
 model = None
