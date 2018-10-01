@@ -61,7 +61,7 @@ class NB_DataHandler:
         training_data = []
         test_data = []
         doc_classes = {}
-        punctuations = string.punctuation
+        punctuations = ""  # string.punctuation
 
         # File reading
         for file in files:
@@ -79,6 +79,7 @@ class NB_DataHandler:
                 # line elements
                 label = int(t_line[1])
                 sentence = t_line[0].lower()
+                raw = sentence
 
                 # removes punctuations
                 for sym in punctuations:
@@ -94,7 +95,7 @@ class NB_DataHandler:
                 words = [stemmer.stem(word) for word in words]
 
                 # wrap and add document to total_data.
-                doc = (label, words)
+                doc = (label, words, raw)
                 total_data.append(doc)
 
                 word_count += len(words)
@@ -212,7 +213,7 @@ class NB_DataHandler:
 
         # console readout
         if not self.quiet:
-            print("Log probabilities calculated")
+            print("Log probabilities calculated\n")
 
     def log_prior(self):
         """
@@ -252,17 +253,20 @@ class NB_DataHandler:
 
         return max(zip(sum_c.values(), sum_c.keys()))
 
-    def test(self, test=None):
+    def test(self, test=None, report=False):
         """
         Internal test and model validation function. classifies test data sentences
         and calculates the accuracy of the model.
 
         :type test: list.
+        :type report: bool
         :param test: A list of alternative testing data.
+        :param report: Boolean trigger for generating a results file.
         :return: The percentage score of the correctly classified cases over the total number of cases.
         """
         score = 0
-        word_count = 0
+        doc_count = 0
+        tag = ""
 
         if test is not None:
             test_docs = test
@@ -270,6 +274,7 @@ class NB_DataHandler:
             test_docs = self.test_data
 
         for doc in test_docs:
+            raw = doc[2]
             words = doc[1]
             label = doc[0]
 
@@ -277,14 +282,104 @@ class NB_DataHandler:
             result = self.nb_classifier(words)
             if result[1] == label:
                 score += 1
+                tag = "Correct"
             else:
 
                 # Add misclassified cases to report array for report generation.
                 self.report_data.append(doc)
+                tag = "Wrong"
 
-            word_count += 1
+            if report:
+                report_file = open("results_file.txt", "a")
+                report_file.write(
+                    "\n\nSentence:\n{}\nTokens{}\nActual:\t{} || Predicted:\t{} || {}".format(raw, words, label,
+                                                                                              result[1], tag))
+            else:
+                pass
 
-        return (score / word_count) * 100
+            doc_count += 1
+
+        res = (score / doc_count) * 100
+
+        if report:
+            report_file = open("results_file.txt", "a")
+            report_file.write("\n\nFinal accuracy: {}%".format(res))
+            report_file.close()
+
+            print("'results_file.txt' created.\n")
+        else:
+            pass
+
+        return res
+
+    def detailed_test(self, test=None, report=False):
+        """
+        Internal test and model validation function. classifies test data sentences
+        and calculates the accuracy of the model.
+        Gives a detailed report on model behaviour.
+
+        :type test: list.
+        :type report: bool
+        :param test: A list of alternative testing data.
+        :param report: Boolean trigger for generating a results file.
+        :return: The percentage score of the correctly classified cases over the total number of cases.
+        """
+        score = 0
+        doc_count = 0
+        tag = ""
+
+        if test is not None:
+            test_docs = test
+        else:
+            test_docs = self.test_data
+
+        for doc in test_docs:
+            raw = doc[2]
+            words = doc[1]
+            label = doc[0]
+
+            # Classify sentence and check if correctly classified.
+            result = self.nb_classifier(words)
+            if result[1] == label:
+                score += 1
+                tag = "Correct"
+
+            else:
+
+                # Add misclassified cases to report array for report generation.
+                self.report_data.append(doc)
+                tag = "Wrong"
+
+            if report:
+                detailed_report_file = open("detailed_results_file.txt", "a")
+                detailed_report_file.write(
+                    "\n\nSentence:\n{}\nTokens{}\nActual:\t{} || Predicted:\t{} || {}\n".format(raw, words, label,
+                                                                                                result[1], tag))
+                for word in words:
+                    if word in self.vocabulary:
+                        p = self.vocabulary[word]['probability']
+                        max_p = max(zip(p.values(), p.keys()))
+                        detailed_report_file.write('\n{}\t-> {}'.format(word, max_p[1]))
+                    else:
+                        detailed_report_file.write('\n{}\t-> {}'.format(word, 'Nan'))
+                detailed_report_file.write('\n')
+            else:
+                pass
+
+            doc_count += 1
+
+        res = (score / doc_count) * 100
+
+        if report:
+            detailed_report_file = open("detailed_results_file.txt", "a")
+            detailed_report_file.write("\n\nFinal accuracy: {}%".format(res))
+            detailed_report_file.close()
+
+            print("'detailed_results_file.txt' created.\n")
+        else:
+            pass
+
+        return res
 
     def trim_common(self):
         """
@@ -316,12 +411,12 @@ class NB_DataHandler:
 
         # console readout
         if not self.quiet:
-            print('{} words removed from vocabulary'.format(len(del_w)))
+            print('{} words removed from vocabulary\n'.format(len(del_w)))
         del del_w
 
-    def report(self, step=10):
+    def report(self, step=1):
         """
-        Generates missclassification report in console. This returns each missclassified
+        Generates misclassification report in console. This returns each missclassified
         sentence and shows how each word was classified. This is t give a better idea how how the model
         is behaving at it's extremes.
 
@@ -330,34 +425,57 @@ class NB_DataHandler:
         """
         word_count = 0
         i = 0
+        file = open("misclassified_results_file.txt", "w")
         for doc in self.report_data:
+            raw = doc[2]
             words = doc[1]
             label = doc[0]
+
+            tag = "Wrong"
 
             result = self.nb_classifier(words)
             if result[1] != label:
                 if i % step == 0:
-                    print("Sentence " + str(word_count))
-                    print('Sentence:\n{}\n\nPredicted\t: {}\nActual\t: {}'.format(str(words), result[1], label))
+                    file.write("\nSentence " + str(word_count))
+                    file.write(
+                        "\n\nSentence:\n{}\nTokens{}\nActual:\t{} || Predicted:\t{} || {}\n".format(raw, words, label,
+                                                                                                    result[1], tag))
 
                     for word in words:
                         if word in self.vocabulary:
                             p = self.vocabulary[word]['probability']
                             max_p = max(zip(p.values(), p.keys()))
-                            print('{}\t-> {}'.format(word, max_p[1]))
+                            file.write('\n{}\t-> {}'.format(word, max_p[1]))
                         else:
-                            print('{}\t-> {}'.format(word, 'Nan'))
-                    print('\n')
+                            file.write('\n{}\t-> {}'.format(word, 'Nan'))
+                    file.write('\n')
                 i += 1
             word_count += 1
 
-    def unit_test(self, file):
+        file.close()
+        print("'misclassified_results_file.txt' created.\n")
+
+    def unit_test(self, file, detail=False):
         """
         Function to test model on a new file.
 
         :type file: str
         :param file: An unknown test file
+        :param detail: Boolean trigger for
         :return: The percentage score of the correctly classified cases over the total number of cases.
         """
         test = self.data_cutter(file)[0]
-        return self.test(test)
+
+        if detail:
+            report_file = open("detailed_results_file.txt", "w")
+            report_file.write("Detailed Unit test results for file: {}"
+                              "\n====================================================\n\n"
+                              .format(file))
+            return self.detailed_test(test, True)
+
+        else:
+            report_file = open("results_file.txt", "w")
+            report_file.write("Unit test results for file: {}"
+                              "\n====================================================\n\n"
+                              .format(file))
+            return self.test(test, True)

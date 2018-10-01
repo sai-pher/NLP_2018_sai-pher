@@ -25,12 +25,13 @@ print("Initial Train Accuracy:\t{}%".format(str(round(res, 3))))
 
 
 # test accuracy over several runs
-print("Selecting best model for unit testing...\n")
-runs = 100
+
+runs = 10
 run = None
 max_res = 0
 model = None
 vals = []
+print("Selecting best model for unit testing out of {} runs...\n".format(runs))
 start = time.time()
 for i in range(1, runs + 1):
     if i % 10 == 0:
@@ -46,7 +47,7 @@ for i in range(1, runs + 1):
 
 avg = sum(vals) / len(vals)
 finish = time.time() - start
-print("Max accuracy on run {}:\t{} average accuracy: {}% \ntime: {}s"
+print("Max accuracy on run {}:\t{}% \nAverage accuracy: {}% \ntime: {}s"
       .format(run, round(max(vals), 3), round(avg, 3), round(finish, 3)))
 
 r = input("Do you wish to display Accuracy plot?\n[Y/N]: ")
@@ -64,10 +65,10 @@ test_res = model.unit_test(test_file)
 
 print("Unit test Accuracy:\t{}%\n".format(round(test_res, 3)))
 
-print("Do you wish to see mssclasification report?\nThis will show how the model behaved on missclasified sentences")
+print("Do you wish to see a detailed report?\nThis will show how the model behaved on each sentences")
 i = input("[Y/N]: ")
 
 if i.lower() == "y":
-    model.report()
+    model.unit_test(test_file, True)
 
 print("End of program")
