@@ -1,3 +1,4 @@
+import pickle
 import random
 import string
 from math import *
@@ -42,6 +43,8 @@ class NB_DataHandler:
         self.log_priors = self.log_prior()
         self.log_likelihood()
 
+    # ========================== prep ========================== #
+
     def data_cutter(self, *custom_files):
         """
         Function to format raw data into training and testing format for classifier use.
@@ -77,7 +80,10 @@ class NB_DataHandler:
                     .split('\t')
 
                 # line elements
-                label = int(t_line[1])
+                try:
+                    label = int(t_line[1])
+                except:
+                    label = "N/A"
                 sentence = t_line[0].lower()
                 raw = sentence
 
@@ -234,6 +240,41 @@ class NB_DataHandler:
 
         return log_priors
 
+    def trim_common(self):
+        """
+        Removes all words with class frequencies within 10% of each other.
+        Uses only words above the a given count to preserve rare words.
+        """
+        # remove words with similar frequencies
+        del_w = []
+        for word, word_freq in self.vocabulary.items():
+            if len(word_freq['class']) > 1:  # Select words in both or more than 1 class
+                if sum(word_freq['frequency'].values()) > 60:
+                    total = sum(word_freq['frequency'].values())
+                    percentage = []
+                    for label, label_freq in word_freq['frequency'].items():
+                        percentage.append((label_freq / total) * 100)
+
+                    # TODO: replace with functools.reduce() function for future proofing.
+                    if len(percentage) == 2:
+                        dif = abs(percentage[0] - percentage[1])
+                    else:
+                        # future proof
+                        dif = 10
+                    if dif < 10:
+                        del_w.append(word)
+
+        # remove common words from vocabulary
+        for word in del_w:
+            del self.vocabulary[word]
+
+        # console readout
+        if not self.quiet:
+            print('{} words removed from vocabulary\n'.format(len(del_w)))
+        del del_w
+
+    # ========================== post-prep ========================== #
+
     def nb_classifier(self, doc):
         """
         Main classification function. This calculated the Naive Bayes probability of a given sentence.
@@ -283,6 +324,10 @@ class NB_DataHandler:
             if result[1] == label:
                 score += 1
                 tag = "Correct"
+
+            elif label == "N/A":
+                score = 0.01
+                tag = "Unknown"
             else:
 
                 # Add misclassified cases to report array for report generation.
@@ -290,21 +335,23 @@ class NB_DataHandler:
                 tag = "Wrong"
 
             if report:
-                report_file = open("results_file.txt", "a")
-                report_file.write(
-                    "\n\nSentence:\n{}\nTokens{}\nActual:\t{} || Predicted:\t{} || {}".format(raw, words, label,
-                                                                                              result[1], tag))
+                with open("results_file.txt", "a") as f:
+                    report_file = f
+                    report_file.write(
+                        "{}\n".format(result[1]))
             else:
                 pass
 
             doc_count += 1
 
         res = (score / doc_count) * 100
+        if res < 1:
+            res = "Unknown"
 
         if report:
-            report_file = open("results_file.txt", "a")
-            report_file.write("\n\nFinal accuracy: {}%".format(res))
-            report_file.close()
+            # with open("results_file.txt", "a") as f:
+            #     report_file = f
+            #     report_file.write("\n\nFinal accuracy: {}%".format(res))
 
             print("'results_file.txt' created.\n")
         else:
@@ -344,6 +391,10 @@ class NB_DataHandler:
                 score += 1
                 tag = "Correct"
 
+            elif label == "N/A":
+                score = 0.01
+                tag = "Unknown"
+
             else:
 
                 # Add misclassified cases to report array for report generation.
@@ -351,29 +402,32 @@ class NB_DataHandler:
                 tag = "Wrong"
 
             if report:
-                detailed_report_file = open("detailed_results_file.txt", "a")
-                detailed_report_file.write(
-                    "\n\nSentence:\n{}\nTokens{}\nActual:\t{} || Predicted:\t{} || {}\n".format(raw, words, label,
-                                                                                                result[1], tag))
-                for word in words:
-                    if word in self.vocabulary:
-                        p = self.vocabulary[word]['probability']
-                        max_p = max(zip(p.values(), p.keys()))
-                        detailed_report_file.write('\n{}\t-> {}'.format(word, max_p[1]))
-                    else:
-                        detailed_report_file.write('\n{}\t-> {}'.format(word, 'Nan'))
-                detailed_report_file.write('\n')
+                with open("detailed_results_file.txt", "a") as f:
+                    detailed_report_file = f
+                    detailed_report_file.write(
+                        "\n\nSentence:\n{}\nTokens{}\nActual:\t{} || Predicted:\t{} || {}\n".format(raw, words, label,
+                                                                                                    result[1], tag))
+                    for word in words:
+                        if word in self.vocabulary:
+                            p = self.vocabulary[word]['probability']
+                            max_p = max(zip(p.values(), p.keys()))
+                            detailed_report_file.write('\n{}\t-> {}'.format(word, max_p[1]))
+                        else:
+                            detailed_report_file.write('\n{}\t-> {}'.format(word, 'Nan'))
+                    detailed_report_file.write('\n')
             else:
                 pass
 
             doc_count += 1
 
         res = (score / doc_count) * 100
+        if res < 1:
+            res = "Unknown"
 
         if report:
-            detailed_report_file = open("detailed_results_file.txt", "a")
-            detailed_report_file.write("\n\nFinal accuracy: {}%".format(res))
-            detailed_report_file.close()
+            with open("detailed_results_file.txt", "a") as f:
+                detailed_report_file = f
+                detailed_report_file.write("\n\nFinal accuracy: {}%".format(res))
 
             print("'detailed_results_file.txt' created.\n")
         else:
@@ -381,38 +435,36 @@ class NB_DataHandler:
 
         return res
 
-    def trim_common(self):
+    def unit_test(self, file, detail=False):
         """
-        Removes all words with class frequencies within 10% of each other.
-        Uses only words above the a given count to preserve rare words.
+        Function to test model on a new file.
+
+        :type file: str
+        :param file: An unknown test file
+        :param detail: Boolean trigger for
+        :return: The percentage score of the correctly classified cases over the total number of cases.
         """
-        # remove words with similar frequencies
-        del_w = []
-        for word, word_freq in self.vocabulary.items():
-            if len(word_freq['class']) > 1:  # Select words in both or more than 1 class
-                if sum(word_freq['frequency'].values()) > 60:
-                    total = sum(word_freq['frequency'].values())
-                    percentage = []
-                    for label, label_freq in word_freq['frequency'].items():
-                        percentage.append((label_freq / total) * 100)
+        test = self.data_cutter(file)[0]
 
-                    # TODO: replace with functools.reduce() function for future proofing.
-                    if len(percentage) == 2:
-                        dif = abs(percentage[0] - percentage[1])
-                    else:
-                        # future proof
-                        dif = 10
-                    if dif < 10:
-                        del_w.append(word)
+        if detail:
+            with open("detailed_results_file.txt", "w") as f:
+                report_file = f
+                report_file.write("Detailed Unit test results for file: {}"
+                                  "\n====================================================\n\n"
+                                  .format(file))
+            return self.detailed_test(test, True)
 
-        # remove common words from vocabulary
-        for word in del_w:
-            del self.vocabulary[word]
+        else:
+            with open("results_file.txt", "w") as f:
+                report_file = f
+                # report_file.write("Unit test results for file: {}"
+                #                   "\n====================================================\n"
+                #                   .format(file))
+            return self.test(test, True)
 
-        # console readout
-        if not self.quiet:
-            print('{} words removed from vocabulary\n'.format(len(del_w)))
-        del del_w
+    def save(self):
+        with open("model.pickle", "wb") as f:
+            pickle.dump(self, f)
 
     def report(self, step=1):
         """
@@ -455,27 +507,30 @@ class NB_DataHandler:
         file.close()
         print("'misclassified_results_file.txt' created.\n")
 
-    def unit_test(self, file, detail=False):
-        """
-        Function to test model on a new file.
 
-        :type file: str
-        :param file: An unknown test file
-        :param detail: Boolean trigger for
-        :return: The percentage score of the correctly classified cases over the total number of cases.
-        """
-        test = self.data_cutter(file)[0]
+# ========================== helper functions ========================== #
+def load():
+    with open("model.pickle", "rb") as f:
+        model = pickle.load(f)
+    return model
 
-        if detail:
-            report_file = open("detailed_results_file.txt", "w")
-            report_file.write("Detailed Unit test results for file: {}"
-                              "\n====================================================\n\n"
-                              .format(file))
-            return self.detailed_test(test, True)
 
-        else:
-            report_file = open("results_file.txt", "w")
-            report_file.write("Unit test results for file: {}"
-                              "\n====================================================\n\n"
-                              .format(file))
-            return self.test(test, True)
+def check_file(*files, default="model.pickle"):
+    flag = False
+    if files:
+        for file in files:
+            try:
+                f = open(file)
+                f.close()
+                flag = True
+            except FileNotFoundError:
+                pass
+    else:
+        try:
+            f = open(default, "rb")
+            f.close()
+            flag = True
+        except FileNotFoundError:
+            pass
+
+    return flag
