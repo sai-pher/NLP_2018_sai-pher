@@ -1,8 +1,10 @@
+
 # coding: utf-8
 
 # # Naive Bayes Sentiment Classification Program
 
-# In[1]:
+# In[ ]:
+
 
 # unit test classifier
 import sys
@@ -16,6 +18,11 @@ imdb = "imdb_labelled.txt"
 yelp = "yelp_labelled.txt"
 test_file = sys.argv[1]  # input("enter test file: ")
 model = None
+
+# In[ ]:
+
+
+# test accuracy over several runs
 
 if util.check_file():
     print("Loading Existing model....")
@@ -32,15 +39,14 @@ else:
         res = v2.test()
         print("Initial Train Accuracy:\t{}%".format(str(round(res, 3))))
 
-        # In[ ]:
-
         # test accuracy over several runs
 
-        runs = 100
+        runs = 1000
         run = None
         max_res = 0
         vals = []
-        print("Selecting best model for unit testing out of {} runs...\n".format(runs))
+        print("Selecting best model for unit testing out of {} runs...\nAverage Wait time => {}m:{}s"
+              .format(runs, int((1.7 * runs) / 60), (20 * runs) % 60))
         start = time.time()
         for i in range(1, runs + 1):
             if i % 10 == 0:
@@ -56,8 +62,8 @@ else:
 
         avg = sum(vals) / len(vals)
         finish = time.time() - start
-        print("Max accuracy on run {}:\t{}% \nAverage accuracy: {}% \ntime: {}s"
-              .format(run, round(max(vals), 3), round(avg, 3), round(finish, 3)))
+        print("Max accuracy on run {}:\t{}% \nAverage accuracy: {}% \ntime: {}m:{}s"
+              .format(run, round(max(vals), 3), round(avg, 3), int((finish) / 60), int((finish) % 60)))
 
         model.save()
 
@@ -66,7 +72,9 @@ else:
             plt.plot(vals)
             plt.show()
 
-        # In[ ]:
+# In[ ]:
+
+
 if model:
     print("beginning unit test on file: {}\n====================================================\n.......\n".format(
         test_file))
