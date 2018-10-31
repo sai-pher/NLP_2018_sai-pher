@@ -16,7 +16,7 @@ import util
 amazon = "amazon_cells_labelled.txt"
 imdb = "imdb_labelled.txt"
 yelp = "yelp_labelled.txt"
-test_file = sys.argv[1]  # input("enter test file: ")
+test_file = input("enter test file: ") # sys.argv[1]  # input("enter test file: ")
 model = None
 
 # In[ ]:
@@ -27,6 +27,7 @@ model = None
 if util.check_file():
     print("Loading Existing model....")
     model = util.load()
+    print(model.show_details())
     print("Completed!")
 else:
     print("Creating new model.....")
@@ -65,6 +66,7 @@ else:
         print("Max accuracy on run {}:\t{}% \nAverage accuracy: {}% \ntime: {}m:{}s"
               .format(run, round(max(vals), 3), round(avg, 3), int((finish) / 60), int((finish) % 60)))
 
+        model.shuffle_trigger(False)
         model.save()
 
         r = input("Do you wish to display Accuracy plot?\n[Y/N]: ")

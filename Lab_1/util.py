@@ -507,6 +507,13 @@ class NB_DataHandler:
         file.close()
         print("'misclassified_results_file.txt' created.\n")
 
+    def shuffle_trigger(self, trigger):
+        self.shuffle = trigger
+
+    def show_details(self):
+        print("shuffle on: {}\n"
+              "".format(self.shuffle))
+
 
 # ========================== helper functions ========================== #
 def load():
