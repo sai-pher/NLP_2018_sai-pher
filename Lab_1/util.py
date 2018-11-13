@@ -14,7 +14,7 @@ class NB_DataHandler:
         """
         Constructor for the Naive Bayes data class. Calls `self.data_cutter()`, `self.model_builder()`,
         `self.trim_common()`, `self.count_classes()`, `self.log_priors()` and `self.log_likelihood()`. This sets up
-        the data and builds the Naive Bayes model inputted files.
+        the data and builds the Naive Bayes models inputted files.
 
         :type trim: bool
         :type shuffle: bool
@@ -296,8 +296,8 @@ class NB_DataHandler:
 
     def test(self, test=None, report=False):
         """
-        Internal test and model validation function. classifies test data sentences
-        and calculates the accuracy of the model.
+        Internal test and models validation function. classifies test data sentences
+        and calculates the accuracy of the models.
 
         :type test: list.
         :type report: bool
@@ -361,9 +361,9 @@ class NB_DataHandler:
 
     def detailed_test(self, test=None, report=False):
         """
-        Internal test and model validation function. classifies test data sentences
-        and calculates the accuracy of the model.
-        Gives a detailed report on model behaviour.
+        Internal test and models validation function. classifies test data sentences
+        and calculates the accuracy of the models.
+        Gives a detailed report on models behaviour.
 
         :type test: list.
         :type report: bool
@@ -437,7 +437,7 @@ class NB_DataHandler:
 
     def unit_test(self, file, detail=False):
         """
-        Function to test model on a new file.
+        Function to test models on a new file.
 
         :type file: str
         :param file: An unknown test file
@@ -463,13 +463,13 @@ class NB_DataHandler:
             return self.test(test, True)
 
     def save(self):
-        with open("model.pickle", "wb") as f:
+        with open("models.pickle", "wb") as f:
             pickle.dump(self, f)
 
     def report(self, step=1):
         """
         Generates misclassification report in console. This returns each missclassified
-        sentence and shows how each word was classified. This is t give a better idea how how the model
+        sentence and shows how each word was classified. This is t give a better idea how how the models
         is behaving at it's extremes.
 
         :type step: int
@@ -517,12 +517,12 @@ class NB_DataHandler:
 
 # ========================== helper functions ========================== #
 def load():
-    with open("model.pickle", "rb") as f:
+    with open("models.pickle", "rb") as f:
         model = pickle.load(f)
     return model
 
 
-def check_file(*files, default="model.pickle"):
+def check_file(*files, default="models.pickle"):
     flag = False
     if files:
         for file in files:
