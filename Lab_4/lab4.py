@@ -4,15 +4,15 @@
 # In[ ]:
 
 
-import pandas as pd
 import pickle
 import sys
+
+import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score
-
 
 # In[ ]:
 
@@ -101,6 +101,7 @@ def read_data(*files):
         temp = pd.read_csv(file, sep='\t', header=None)
         data.append(temp[0])
         labels.append(temp[1])
+
         
     data = pd.concat(data)
     labels = pd.concat(labels)
@@ -253,7 +254,7 @@ def train():
     print("Normalised Naive Bayes: {}%".format(round(res * 100, 3)))
 
 
-# train()
+train()
 
 
 # In[ ]:
