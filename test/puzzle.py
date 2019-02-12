@@ -13,7 +13,7 @@ def match_string(text, pattern):
             j = j + 1
         if j == m:
             return i
-    return False
+    return -1
 
 
 def word_find_horizontal(puzzle, word):
@@ -29,7 +29,7 @@ def word_find_horizontal(puzzle, word):
         results_lr.append(match_string(row[0], word))
     for row in puzzle:
         results_rl.append(match_string(row[0][::-1], word))
-    return results_lr, [i if i is False else len(row[0]) - 1 - i for i in results_rl]
+    return results_lr, [i if i is -1 else len(row[0]) - 1 - i for i in results_rl]
 
 
 def word_find_vertical(puzzle, word):
@@ -52,10 +52,10 @@ def word_find_vertical(puzzle, word):
         results_tb.append(match_string(rowString, word))
         results_bt.append(match_string(rowString[::-1], word))
 
-    return results_tb, [i if i is False else len(row[0]) - 1 - i for i in results_bt]
+    return results_tb, [i if i is -1 else len(row[0]) - 1 - i for i in results_bt]
 
 
-def word_find_diagonal(puzzle, word):
+def word_find_diagonal1(puzzle, word):
     """
 
     :param puzzle: 2D array of text
@@ -83,17 +83,62 @@ def word_find_diagonal(puzzle, word):
         results_tl_br.append(match_string(rowString, word))
         results_br_tl.append(match_string(rowString[::-1], word))
 
+    return results_tl_br, [i if i is -1 else len(puzzle[0][0]) - 1 - i for i in results_br_tl]
+
+
+'''
+def word_find_diagonal2(puzzle,word):
+    """
+
+        :param puzzle: 2D array of text
+        :param words: 1D array of words to find
+        :return: ??
+        """
+    results_tl_br = []  # Array of results when searching from top left to bottom right
+    results_br_tl = []  # Array of results when searching from bottom right to top left
+    rowLength = len(puzzle[0][0])
+
+    n = rowLength
+
+    for i in range(n):
+        rowString = ""
+        for j in range((n - i)):
+            rowString += puzzle[j + i][0][j]
+        results_tl_br.append(match_string(rowString, word))
+        results_br_tl.append(match_string(rowString[::-1], word))
+
+    for i in range(n, 0, -1):
+        rowString = ""
+        for j in range((n - i)):
+            rowString += puzzle[j][0][j + i]
+
+        results_tl_br.append(match_string(rowString, word))
+        results_br_tl.append(match_string(rowString[::-1], word))
+
     return results_tl_br, [i if i is False else len(puzzle[0][0]) - 1 - i for i in results_br_tl]
+   '''
 
 
+def main(puzzle, wordList):
+    for word in wordList:
+        horizontal = (word_find_horizontal(puzzle, word))
+        vertical = (word_find_vertical(puzzle, word))
+        diagonal1 = (word_find_diagonal1(puzzle, word))
+
+        hr = horizontal[0]
+        for i in horizontal[0]:
+            if i > -1:
+                pos = horizontal[0].index(i)
+                print("Found: " + word + " at" + " (" + str(horizontal[0].index(int(i))) + "," + str(
+                    i) + ") from left to right")
+            else:
+                pass
+        # print(word_find_diagonal2(puzzle_test, word_test))
 puzzle_test = [["rredt"],
                ["eeree"],
                ["dadra"],
                ["cakeh"],
                ["teahr"]]
 
-word_test = "red"
-
-print(word_find_horizontal(puzzle_test, word_test))
-print(word_find_vertical(puzzle_test, word_test))
-print(word_find_diagonal(puzzle_test, word_test))
+word_test = ["red", "cake", "dad", "tea"]
+main(puzzle_test, word_test)
