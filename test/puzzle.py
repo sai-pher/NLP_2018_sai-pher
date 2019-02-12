@@ -120,25 +120,48 @@ def word_find_diagonal2(puzzle,word):
 
 
 def main(puzzle, wordList):
+    print("Printing (row,column) positions of words found!")
+    print("===============================================")
     for word in wordList:
         horizontal = (word_find_horizontal(puzzle, word))
         vertical = (word_find_vertical(puzzle, word))
         diagonal1 = (word_find_diagonal1(puzzle, word))
+        # diagonal2 = word_find_diagonal2(puzzle, word)
 
-        hr = horizontal[0]
+
         for i in horizontal[0]:
             if i > -1:
-                pos = horizontal[0].index(i)
                 print("Found: " + word + " at" + " (" + str(horizontal[0].index(int(i))) + "," + str(
-                    i) + ") from left to right")
+                    i) + ") from left to right. \n")
             else:
                 pass
-        # print(word_find_diagonal2(puzzle_test, word_test))
+
+        for i in horizontal[1]:
+            if i > -1:
+                print("Found: " + word + " at" + " (" + str(horizontal[1].index(int(i))) + "," + str(
+                    i) + ") from right to left. \n")
+            else:
+                pass
+
+        for i in vertical[0]:
+            if i > -1:
+                print("Found: " + word + " at" + " (" + str(i) + "," + str(
+                    vertical[0].index(int(i))) + ") from top to bottom. \n")
+            else:
+                pass
+
+        for i in vertical[1]:
+            if i > -1:
+                print("Found: " + word + " at" + " (" + str(i) + "," + str(
+                    vertical[1].index(int(i))) + ") from bottom to top. \n")
+            else:
+                pass
+
 puzzle_test = [["rredt"],
                ["eeree"],
                ["dadra"],
                ["cakeh"],
                ["teahr"]]
 
-word_test = ["red", "cake", "dad", "tea"]
+word_test = ["red", "cake", "dad", "tea", "lake"]
 main(puzzle_test, word_test)
