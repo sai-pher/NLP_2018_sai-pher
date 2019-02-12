@@ -157,11 +157,14 @@ def main(puzzle, wordList):
             else:
                 pass
 
-puzzle_test = [["rredt"],
-               ["eeree"],
-               ["dadra"],
-               ["cakeh"],
-               ["teahr"]]
 
-word_test = ["red", "cake", "dad", "tea", "lake"]
+puzzle_test = [["iioray"],
+               ["gaeyoj"],
+               ["besbat"],
+               ["daehmd"],
+               ["marvel"],
+               ["ppaens"],
+               ]
+
+word_test = ["ashes", "yoda", "ada", "marvel", "joy", "lie", "yaro,", "velma"]
 main(puzzle_test, word_test)
